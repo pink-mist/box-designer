@@ -20,20 +20,25 @@ get '/svg' => sub {
   my $h_flap = int 0.15*$height;
   my $d_flap = int $depth/2;
 
-  $x_offset = $depth+$w_flap+5;
+  $x_offset = $depth+$w_flap+$h_flap+5;
   $y_offset = 2*$depth+$height+2*$h_flap+20;
 
-  my $svg = SVG->new(width => $width+2*($depth+$w_flap)+15 . 'mm', height => 2*($height+$depth+$h_flap+1) + 30 . 'mm');
+  my $svg = SVG->new(width => $width+2*($depth+$w_flap+$h_flap)+15 . 'mm', height => 2*($height+$depth+$h_flap+1) + 40 . 'mm');
 
   # front
-  $svg->cut_line([0,$height-$h_flap],[$h_flap,$height],[$width-$h_flap,$height],[$width,$height-$h_flap]);
+
+  my $alpha = atan2($h_flap,$depth);
+  my $x = sin(2*$alpha) * $h_flap;
+  my $y = cos(2*$alpha) * $h_flap;
+
+  $svg->cut_line([0,0],[-($depth+$w_flap),0],[-($depth+$w_flap),$height],
+    [-$depth,$height],[-$depth+$x,$height+$y],[0+$x,$height-$h_flap+$y],[0,$height-$h_flap],
+    [0+$x,$height-$h_flap+$y],[$width-$x,$height-$h_flap+$y],
+    [$width,$height-$h_flap],[$width-$x,$height-$h_flap+$y],[$width+$depth-$x,$height+$y],[$width+$depth,$height],
+    [$width+$depth+$w_flap,$height],[$width+$depth+$w_flap,0],[$width,0]);
   $svg->fold_line([0,0],[0,$height-$h_flap],[$width,$height-$h_flap],[$width,0]);
   $svg->fold_line([0,0], [$width,0]);
-
-  # front sides
-  $svg->cut_line([0,0],[-($depth+$w_flap),0],[-($depth+$w_flap),$height],[$h_flap,$height]);
   $svg->fold_line([-$depth,0],[-$depth,$height],[0,$height-$h_flap]);
-  $svg->cut_line([$width,0],[$width+$depth+$w_flap,0],[$width+$depth+$w_flap,$height],[$width-$h_flap,$height]);
   $svg->fold_line([$width+$depth,0],[$width+$depth,$height],[$width,$height-$h_flap]);
 
   # bottom
@@ -54,11 +59,11 @@ get '/svg' => sub {
   $svg->fold_line([$width+$h_flap+6,-($depth+$height)],[$width+$h_flap+6,-(2*$depth+$height)]);
 
   # lid lip
-  $svg->fold_line([0,-(2*$depth+$height)],[0,-(2*$depth+$height+$h_flap+5)],[$width,-(2*$depth+$height+$h_flap+5)],[$width,-(2*$depth+$height)]);
+  $svg->fold_line([0,-(2*$depth+$height+$h_flap+5)],[$width,-(2*$depth+$height+$h_flap+5)]);
   $svg->cut_line([0,-(2*$depth+$height)],[-$depth,-(2*$depth+$height)],[-$depth,-(2*$depth+$height+$h_flap+5)],[0,-(2*$depth+$height+$h_flap+5)]);
   $svg->cut_line([$width,-(2*$depth+$height)],[$width+$depth,-(2*$depth+$height)],[$width+$depth,-(2*$depth+$height+$h_flap+5)],[$width,-(2*$depth+$height+$h_flap+5)]);
-  $svg->fold_line([0,-(2*$depth+$height+$h_flap)],[0,-(2*$depth+$height+2*$h_flap+9)]);
-  $svg->fold_line([$width,-(2*$depth+$height+2*$h_flap+9)],[$width,-(2*$depth+$height+$h_flap)]);
+  $svg->fold_line([0,-(2*$depth+$height)],[0,-(2*$depth+$height+2*$h_flap+9)]);
+  $svg->fold_line([$width,-(2*$depth+$height+2*$h_flap+9)],[$width,-(2*$depth+$height)]);
   $svg->cut_line([-$depth,-(2*$depth+$height+$h_flap+5)],[-$depth,-(2*$depth+$height+2*$h_flap+9)],[$width+$depth,-(2*$depth+$height+2*$h_flap+9)],[$width+$depth,-(2*$depth+$height+$h_flap+5)]);
 
   $c->render(data => $svg->xmlify, format => 'svg');
@@ -74,7 +79,7 @@ sub SVG::cut_line {
     $svg->line(
       x1 => $from->[0]+3+$x_offset . 'mm', y1 => $from->[1]+3+$y_offset . 'mm',
       x2 => $to->[0]  +3+$x_offset . 'mm', y2 => $to->[1]  +3+$y_offset . 'mm',
-      style => { stroke => 'black', 'stroke-width' => 1, }
+      style => { stroke => 'black', 'stroke-width' => 1, },
     );
     $from = $to;
   }
@@ -82,6 +87,9 @@ sub SVG::cut_line {
 
 sub SVG::fold_line {
   my $svg = shift;
+  my $colour = 'black';
+  $colour = pop unless ref $_[-1];
+
   my @points = @_;
   my $from = shift @points;
 
@@ -90,12 +98,11 @@ sub SVG::fold_line {
     $svg->line(
       x1 => $from->[0]+3+$x_offset . 'mm', y1 => $from->[1]+3+$y_offset . 'mm',
       x2 => $to->[0]  +3+$x_offset . 'mm', y2 => $to->[1]  +3+$y_offset . 'mm',
-      style => { stroke => 'black', 'stroke-width' => 1, 'stroke-dasharray' => '6,2'}
+      style => { stroke => $colour, 'stroke-width' => 1, 'stroke-dasharray' => '6,2'},
     );
     $from = $to;
   }
 }
-
 
 app->start;
 __DATA__
