@@ -109,7 +109,7 @@ __DATA__
 
 @@ index.html.ep
 % layout 'default';
-% title 'Welcome';
+% title 'Box designer';
 %= image url_for('svg')->query(height => param('height'), width => param('width'), depth => param('depth'));
 %= form_for '/' => (method => 'POST') => begin
   %= t label => begin
