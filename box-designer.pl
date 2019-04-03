@@ -105,14 +105,20 @@ __DATA__
 % title 'Welcome';
 %= image url_for('svg')->query(height => param('height'), width => param('width'), depth => param('depth'));
 %= form_for '/' => (method => 'POST') => begin
-  %= label_for 'height', 'Height:'
+  %= t label => begin
+    Height:
   %= text_field 'height'
+  %= end
   <br>
-  %= label_for 'width', 'Width:'
+  %= t label => begin
+    Width:
   %= text_field 'width'
+  %= end
   <br>
-  %= label_for 'depth', 'Depth:'
+  %= t label => begin
+    Depth:
   %= text_field 'depth'
+  %= end
   <br>
   %= submit_button 'Render'
 %= end
