@@ -126,6 +126,14 @@ __DATA__
 @@ layouts/default.html.ep
 <!DOCTYPE html>
 <html>
-  <head><title><%= title %></title></head>
+  <head>
+    <title><%= title %></title>
+    <style>
+      body { text-align: center; margin-left: auto; margin-right: auto; }
+      @media print {
+        form { display: none; }
+      }
+    </style>
+  </head>
   <body><%= content %></body>
 </html>
